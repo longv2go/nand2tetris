@@ -8,11 +8,6 @@ from enum import Enum
 from predefines import predefined_symbols, dest_instruction_map, jump_instruction_map, comp_instruction_map_a0, comp_instruction_map_a1
 import argparse
 
-# class Colors(Enum):
-#     RED = 'red'
-#     GREEN = 'green'
-#     BLUE = 'blue'
-
 # SYMBOL TABLE 
 _symbal_table = dict(predefined_symbols)
 _current_variable_assign_addr = 16
