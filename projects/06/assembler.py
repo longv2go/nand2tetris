@@ -182,7 +182,7 @@ def gen_codes(instrs, debug=False):
     """ 翻译二进制代码 """
     return [f"{inst.gen_code()}        ;{inst.lineCode}" if debug else inst.gen_code() for inst in instrs]
 
-def print_symbol_talbe():
+def print_symbol_table():
     print("\n")
     print("#################################")
     print("         Symbol Talbe            ")
@@ -209,7 +209,7 @@ def main():
         for l in codes:
             print(l)
         if args.debug:
-            print_symbol_talbe()
+            print_symbol_table()
 
 if __name__ == '__main__':
     main()
