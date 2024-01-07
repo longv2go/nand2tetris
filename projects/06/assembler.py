@@ -128,11 +128,11 @@ class Instruction:
             dest_key = ''.join(sorted(self.dest)) if self.dest != 'null' else self.dest
             dest = dest_instruction_map.get(dest_key) 
             if dest is None:
-                raise Exception(f"Not found dest for {self.code} - {self.dest}")
+                raise Exception(f"Not found dest for {self.dest}, {self.lineCode}")
             
             jump = jump_instruction_map.get(self.jump)
             if jump is None:
-                raise Exception(f"Not found jump for {self.code}")
+                raise Exception(f"Not found jump for {self.jump}, {self.lineCode}")
             
             comp = comp_instruction_map_a0.get(self.comp)
             a = '0'
@@ -182,13 +182,10 @@ def gen_codes(instrs, debug=False):
     """ 翻译二进制代码 """
     return [f"{inst.gen_code()}        ;{inst.lineCode}" if debug else inst.gen_code() for inst in instrs]
 
-def print_symbol_talbe(debug=False):
-    if not debug:
-        return
-    
+def print_symbol_talbe():
     print("\n")
     print("#################################")
-    print("         Symbol Talbe           ")
+    print("         Symbol Talbe            ")
     print("#################################")
 
     # 过滤常规的
@@ -199,12 +196,8 @@ def print_symbol_talbe(debug=False):
 def main():
     parser = argparse.ArgumentParser(description='HACK assembler')
     parser.add_argument('--debug', action='store_true', default=False, help='output debug info')
-    parser.add_argument('input')
+    parser.add_argument('input', help="input file")
     args = parser.parse_args()
-
-    if args.input is None:
-        print("Please supply file.asm")
-        exit(1)
     
     with open(args.input) as f:
         lines = f.readlines()
@@ -215,7 +208,8 @@ def main():
         # output to stdout
         for l in codes:
             print(l)
-        print_symbol_talbe(args.debug)
+        if args.debug:
+            print_symbol_talbe()
 
 if __name__ == '__main__':
     main()
