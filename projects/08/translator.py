@@ -102,38 +102,38 @@ class ArithmeticInstruction(Instruction):
         _map = {'add': '+', 'sub': '-', 'and': '&', 'or': '|', 'eq': '-', 'gt': '-', 'lt': '-'}
         if self.parts[0] in _map.keys():
             return f"""
-                // {self.lineCode}
-                @SP     // sp--
-                M=M-1
-                @SP     // D = *sp
-                A=M
-                D=M
-                @SP     // *(sp-1) = x - y
-                A=M-1   
-                M=M{_map[self.parts[0]]}D
-            """
+// {self.lineCode}
+@SP     // sp--
+M=M-1
+@SP     // D = *sp
+A=M
+D=M
+@SP
+A=M-1   
+M=M{_map[self.parts[0]]}D
+"""
         
         if self.parts[0] == 'not':
             return f"""
-                // {self.lineCode}
-                @SP     // D = *sp
-                A=M
-                D=M
-                @SP     // *(sp-1) = x - y
-                A=M-1   
-                M=!D
-            """
+// {self.lineCode}
+@SP     // D = *sp
+A=M
+D=M
+@SP
+A=M-1   
+M=!D
+"""
         
         if self.parts[0] == 'neg':
             return f"""
-                // {self.lineCode}
-                @SP     // D = *sp
-                A=M
-                D=M
-                @SP     // *(sp-1) = x - y
-                A=M-1   
-                M=-D
-            """
+// {self.lineCode}
+@SP     // D = *sp
+A=M
+D=M
+@SP
+A=M-1   
+M=-D
+"""
 
 class PushInstruction(Instruction):
     def __init__(self, parts, lineCode):
@@ -147,55 +147,55 @@ class PushInstruction(Instruction):
     def translate(self, **funcs):
         if self.parts[1] == 'constant':
             return f"""
-                // {self.lineCode}
-                @{self.parts[2]}
-                D=A
-                @SP
-                A=M
-                M=D
-                @SP
-                M=M+1
-            """
+// {self.lineCode}
+@{self.parts[2]}
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+"""
         
         _map = {'local': 'LCL', 'argument': 'ARG', 'this': 'THIS', 'that': 'THAT'}
         if self.parts[1] in _map.keys():
             return f"""
-                // {self.lineCode}
-                @{_map[self.parts[1]]}
-                A=M+{self.parts[2]}
-                D=M
-                @SP
-                A=M
-                M=D
-                @SP // sp = sp + 1
-                M=M+1
-            """
+// {self.lineCode}
+@{_map[self.parts[1]]}
+A=M+{self.parts[2]}
+D=M
+@SP
+A=M
+M=D
+@SP // sp++
+M=M+1
+"""
 
         if self.parts[1] == 'static':
             func = funcs['static_symbol']
             sym = func(self.lineCode.filename)
             return f"""
-                // {self.lineCode}
-                @{sym}
-                D=M
-                @SP
-                A=M
-                M=D
-                @SP
-                M=M+1
-            """
+// {self.lineCode}
+@{sym}
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+"""
         if self.parts[1] == 'temp':
             return f"""
-                // {self.lineCode}
-                @{self.parts[2]}
-                A=M+5
-                D=M
-                @SP
-                A=M
-                M=D
-                @SP
-                M=M+1
-            """
+// {self.lineCode}
+@{self.parts[2]}
+A=M+5
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+"""
         # TODO: pointer
 
 
@@ -215,42 +215,42 @@ class PopInstruction(Instruction):
         _map = {'local': 'LCL', 'argument': 'ARG', 'this': 'THIS', 'that': 'THAT'}
         if self.parts[1] in _map.keys():
             return f"""
-                // {self.lineCode}
-                @SP
-                A=M
-                D=M
-                @{_map[self.parts[1]]}
-                A=M+{self.parts[2]}
-                M=D
-                @SP // sp = sp - 1
-                M=M-1
-            """
+// {self.lineCode}
+@SP
+A=M
+D=M
+@{_map[self.parts[1]]}
+A=M+{self.parts[2]}
+M=D
+@SP // sp = sp - 1
+M=M-1
+"""
 
         if self.parts[1] == 'static':
             func = funcs['static_symbol']
             sym = func(self.lineCode.filename)
             return f"""
-                // {self.lineCode}
-                @SP
-                A=M
-                D=M
-                @{sym}
-                M=D
-                @SP
-                M=M-1
-            """
+// {self.lineCode}
+@SP
+A=M
+D=M
+@{sym}
+M=D
+@SP
+M=M-1
+"""
         if self.parts[1] == 'temp':
             return f"""
-                // {self.lineCode}
-                @SP
-                A=M
-                D=M
-                @{self.parts[2]}
-                A=M+5
-                M=D
-                @SP
-                M=M-1
-            """
+// {self.lineCode}
+@SP
+A=M
+D=M
+@{self.parts[2]}
+A=M+5
+M=D
+@SP
+M=M-1
+"""
         # TODO: pointer
 
 class BranchInstruction(Instruction):
@@ -293,7 +293,7 @@ class Parser:
              raise StopIteration()
         
         line = self.lines[self.index]
-        instr = Instruction.create(line, self.index, PurePath(self.file).name)
+        instr = Instruction.create(line, self.index + 1, PurePath(self.file).name)
         self.index += 1
         return instr
     
@@ -303,11 +303,19 @@ class CodeWriter:
     
 
 def main(args):
+    _static_symbol_table = {}
+    def static_symbol(filename):
+        if filename not in _static_symbol_table:
+            _static_symbol_table[filename] = 0
+        num = _static_symbol_table[filename]
+        _static_symbol_table[filename] = num + 1
+        return f"{filename[0:-3]}.{num}"
+
     if args.input:
         parser = Parser(args.input)
         parser.load()
         for inst in parser:
-            print(inst.translate())
+            print(inst.translate(**{'static_symbol': static_symbol}))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='VM translator')
