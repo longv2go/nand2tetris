@@ -191,7 +191,7 @@ def print_symbol_table():
     # 过滤常规的
     table = {k:v for k, v in _symbal_table.items() if not k.startswith('R') or not k[1:].isnumeric()}
     for k, v in table.items():
-        print(f"{k:24}{str(v):>32}")
+        print(f"{k:32}{str(v):>16}")
 
 def main():
     parser = argparse.ArgumentParser(description='HACK assembler')
